@@ -16,6 +16,13 @@
 
 package io.confluent.connect.s3;
 
+import io.confluent.connect.s3.storage.S3Storage;
+import io.confluent.connect.storage.common.StorageCommonConfig;
+import io.confluent.connect.storage.format.RecordWriter;
+import io.confluent.connect.storage.format.RecordWriterProvider;
+import io.confluent.connect.storage.hive.HiveConfig;
+import io.confluent.connect.storage.partitioner.Partitioner;
+import io.confluent.connect.storage.schema.StorageSchemaCompatibility;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.utils.Time;
@@ -33,16 +40,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
-
-import io.confluent.connect.s3.storage.S3Storage;
-import io.confluent.connect.storage.common.StorageCommonConfig;
-import io.confluent.connect.storage.format.RecordWriter;
-import io.confluent.connect.storage.format.RecordWriterProvider;
-import io.confluent.connect.storage.hive.HiveConfig;
-import io.confluent.connect.storage.partitioner.Partitioner;
-import io.confluent.connect.storage.partitioner.PartitionerConfig;
-import io.confluent.connect.storage.partitioner.TimeBasedPartitioner;
-import io.confluent.connect.storage.schema.StorageSchemaCompatibility;
 
 public class TopicPartitionWriter {
   private static final Logger log = LoggerFactory.getLogger(TopicPartitionWriter.class);
@@ -98,9 +95,7 @@ public class TopicPartitionWriter {
 
     flushSize = connectorConfig.getInt(S3SinkConnectorConfig.FLUSH_SIZE_CONFIG);
     topicsDir = connectorConfig.getString(StorageCommonConfig.TOPICS_DIR_CONFIG);
-    rotateIntervalMs = partitioner instanceof TimeBasedPartitioner ?
-                           ((TimeBasedPartitioner) partitioner).getPartitionDurationMs() :
-                           connectorConfig.getLong(PartitionerConfig.PARTITION_DURATION_MS_CONFIG);
+    rotateIntervalMs = Long.MAX_VALUE;
     timeoutMs = connectorConfig.getLong(S3SinkConnectorConfig.RETRY_BACKOFF_CONFIG);
     compatibility = StorageSchemaCompatibility.getCompatibility(
         connectorConfig.getString(HiveConfig.SCHEMA_COMPATIBILITY_CONFIG));
